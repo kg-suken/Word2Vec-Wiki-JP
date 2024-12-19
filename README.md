@@ -5,6 +5,7 @@
 ```
 pip install fastapi[all] gensim mecab-python3 uvicorn unidic-lite
 ```
+pythonコードを実行し、htmlファイルをブラウザで開くと加法、減法のUIが表示されます。
 
 ## 加法、減法の例
 - **人生 - 金**
