@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word2Vec</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+    }
+    h3,
+    h2 {
+      text-align: center;
+    }
+
+    .form-container {
+      max-width: 400px;
+      margin: 0 auto;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    select, input {
+      width: calc(65% - 6px);
+      padding: 8px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+      display: inline-block;
+    }
+
+    .sign {
+      width: 20%;
+      margin-right: 10px;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .button-container button {
+      width: 48%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .add-button {
+      background-color: #008CBA;
+      color: white;
+    }
+
+    .send-button {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .examples-button {
+      background-color: #ff8c00;
+      color:  white;
+    }
+
+    .remove-button {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    @media only screen and (max-width: 600px) {
+      .form-container {
+        max-width: 100%;
+      }
+
+      select, input, button {
+        width: 100%;
+      }
+
+      .sign {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+
+      .button-container {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .button-container button {
+        width: 100%;
+      }
+    }
+    #sign1 {
+        display: none;
+    }
+    #box1 {
+        width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Word2Vec</h2>
+<h3>単語の足し算、引き算ができます</h3>
+
+<div class="form-container">
+  <div>
+    <select class="sign" id="sign1">
+      <option value="+">+</option>
+      <option value="-">-</option>
+    </select>
+    <input type="text" class="box" id="box1" placeholder="テキストを入力">
+  </div>
+  <div id="additionalFields" class="additional-fields">
+    <!-- ここに動的に生成されるフィールドが追加されます -->
+  </div>
+  <div class="button-container">
+    <button class="add-button" type="button" onclick="addFields()">追加</button>
+    <button class="examples-button" type="button" onclick="help()">例</button>
+  </div>
+  <div class="button-container">
+      <button class="send-button" type="button" onclick="postData()" style="width:100%;">結果を表示</button>
+  </div>
+</div>
+
+<div id="result"></div>
+
+<script>
+  let fieldCount = 1;
+
+  function addFields() {
+    if (fieldCount < 10) {
+      fieldCount++;
+
+      const container = document.getElementById('additionalFields');
+      const div = document.createElement('div');
+      div.id = `additionalField${fieldCount}`;
+      div.innerHTML = `
+        <select class="sign" id="sign${fieldCount}">
+          <option value="+">+</option>
+          <option value="-">-</option>
+        </select>
+        <input type="text" class="box" id="box${fieldCount}" placeholder="テキストを入力">
+        <button class="remove-button" type="button" onclick="removeField(${fieldCount})">削除</button>
+      `;
+      container.appendChild(div);
+    }
+  }
+
+  function removeField(index) {
+    if (fieldCount > 1) {
+      const container = document.getElementById('additionalFields');
+      const divToRemove = document.getElementById(`additionalField${index}`);
+      container.removeChild(divToRemove);
+      fieldCount--;
+    }
+  }
+
+  function postData() {
+    const data = {
+      positive: [],
+      negative: []
+    };
+
+    // 初期のフィールド
+    processField(data, '1');
+
+    // 追加されたフィールド
+    for (let i = 2; i <= fieldCount; i++) {
+      processField(data, String(i));
+    }
+
+    // JSONデータをPOSTする
+    fetch('http://localhost:8080/word-embedding', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(responseData => {
+      // レスポンスを表示する
+      displayResults(responseData.results);
+    })
+    .catch(error => {
+      console.error('エラー:', error);
+      alert('エラーが発生しました');
+    });
+  }
+
+  function processField(data, index) {
+    const boxValue = document.getElementById(`box${index}`).value.trim();
+    const signValue = document.getElementById(`sign${index}`).value;
+
+    if (boxValue !== '') {
+      if (signValue === '+') {
+        data.positive.push(boxValue);
+      } else {
+        data.negative.push(boxValue);
+      }
+    }
+  }
+
+  function displayResults(results) {
+    const resultElement = document.getElementById('result');
+    resultElement.innerHTML = ''; // 結果を初期化
+
+    if (results && results.length > 0) {
+      const table = document.createElement('table');
+      const headerRow = document.createElement('tr');
+
+      // ヘッダー行を作成
+      const headers = ['単語', 'スコア'];
+      headers.forEach(headerText => {
+        const th = document.createElement('th');
+        th.textContent = headerText;
+        headerRow.appendChild(th);
+      });
+
+      table.appendChild(headerRow);
+
+      // データ行を作成
+      results.forEach(result => {
+        const row = document.createElement('tr');
+        result.forEach(data => {
+          const td = document.createElement('td');
+          td.textContent = data;
+          row.appendChild(td);
+        });
+        table.appendChild(row);
+      });
+
+      resultElement.appendChild(table);
+    } else {
+      resultElement.textContent = '結果がありません';
+    }
+
+
+  }
+  function help(){
+    // 新しいウィンドウを開く
+    var newWindow = window.open("./PromptHelp.html", "chataihelpWindow", "width=800,height=600");
+}
+</script>
+
+</body>
+</html>

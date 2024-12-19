@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文章一覧</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .article-list {
+      list-style: none;
+      padding: 0;
+    }
+    .article-item {
+      background-color: #f9f9f9;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .article-item:hover {
+      background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>プロンプト例</h1>
+    <ul class="article-list" id="articleList">
+    </ul>
+  </div>
+
+  <script>
+    const articles = [
+      "人生-金",
+      "人間-娯楽",
+      "猫+小判",
+      "イギリス-王",
+      "東京-日本+中国",
+      "ゲーム+SNS",
+      "テレビ-映像",
+      "ラジオ+映像",
+      "罪悪感-笑い", 
+      "心-闘争",
+      "木琴+鉄-木",
+      "2ch-日本+アメリカ",
+      "円-日本+アメリカ",
+      "善人+正義",
+      "白熱電球-電力", 
+      "手紙+ネットワーク",
+      "ギター+電気",
+      "日本語-日本+アメリカ",
+      "PlayStation-ソニー+任天堂", 
+    ];
+
+    // 文章を表示する関数
+    function displayArticles() {
+      const articleList = document.getElementById("articleList");
+      articleList.innerHTML = ""; // 初期化
+
+      articles.forEach((article, index) => {
+        const li = document.createElement("li");
+        li.classList.add("article-item");
+        li.textContent = article;
+        articleList.appendChild(li);
+      });
+    }
+
+    // ページ読み込み時に文章を表示
+    window.addEventListener("DOMContentLoaded", displayArticles);
+  </script>
+</body>
+</html>
